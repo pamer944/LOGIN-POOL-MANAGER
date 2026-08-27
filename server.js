@@ -1,4 +1,4 @@
-   app.use(express.static('.'));
+const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -9,51 +9,37 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname)));
 
 // Serve index.html for root path
 app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Database file
 const DB_FILE = 'accounts.json';
 
-// Load or create database
 function loadDatabase() {
   if (fs.existsSync(DB_FILE)) {
     return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
   }
-  return {
-    accounts: []
-  };
+  return { accounts: [] };
 }
 
-// Save database
 function saveDatabase(data) {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
-// Initialize database
 let db = loadDatabase();
 
-// Routes
-
-// Get all accounts with counts
+// Get all accounts
 app.get('/api/accounts', (req, res) => {
-  const counts = {
-    locked: db.accounts.filter(a => a.status === 'locked').length,
-    inUse: db.accounts.filter(a => a.status === 'in_use').length,
-    waiting: db.accounts.filter(a => a.status === 'waiting').length,
-    badPassword: db.accounts.filter(a => a.status === 'bad_password').length,
-    accounts: db.accounts
-  };
-  res.json(counts);
+  res.json({ accounts: db.accounts });
 });
 
 // Add new account
 app.post('/api/accounts', (req, res) => {
-  const { phone, password } = req.body;
+  const { phone, password, status } = req.body;
   
   if (!phone || !password) {
     return res.status(400).json({ error: 'Phone and password required' });
@@ -63,7 +49,7 @@ app.post('/api/accounts', (req, res) => {
     id: Date.now(),
     phone,
     password,
-    status: 'waiting',
+    status: status || 'available',
     createdAt: new Date(),
     lockedAt: null,
     unlocksAt: null
@@ -112,5 +98,4 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}`);
 });
