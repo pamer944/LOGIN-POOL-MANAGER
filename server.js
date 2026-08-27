@@ -1,4 +1,4 @@
-const express = require('express');
+   app.use(express.static('public'));
 const cors = require('cors');
 const fs = require('fs');
 
