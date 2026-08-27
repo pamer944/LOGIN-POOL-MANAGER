@@ -1,0 +1,17 @@
+{
+  "name": "login-pool-manager",
+  "version": "1.0.0",
+  "description": "Login Pool Manager - Track and manage account statuses",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["login", "pool", "manager"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

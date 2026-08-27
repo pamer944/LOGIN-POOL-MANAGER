@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Pool Manager</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #1a1a1a;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+
+    h1 {
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lock-icon {
+      font-size: 24px;
+    }
+
+    .status-badge {
+      background: #8b3a3a;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      border: 2px solid;
+      border-radius: 16px;
+      padding: 25px;
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card-locked {
+      border-color: #c44545;
+      background: linear-gradient(135deg, rgba(196, 69, 69, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+    }
+
+    .card-in-use {
+      border-color: #2563eb;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+    }
+
+    .card-waiting {
+      border-color: #7c3aed;
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+    }
+
+    .card-bad {
+      border-color: #8b4513;
+      background: linear-gradient(135deg, rgba(139, 69, 19, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-icon {
+      font-size: 18px;
+    }
+
+    .card-number {
+      font-size: 56px;
+      font-weight: bold;
+      margin: 20px 0;
+      line-height: 1;
+    }
+
+    .card-locked .card-number {
+      color: #ff9999;
+    }
+
+    .card-in-use .card-number {
+      color: #60a5fa;
+    }
+
+    .card-waiting .card-number {
+      color: #c4b5fd;
+    }
+
+    .card-bad .card-number {
+      color: #ff9966;
+    }
+
+    .card-info {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #b8860b;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: #d4a017;
+      transform: scale(1.02);
+    }
+
+    .btn-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .add-account {
+      background: #2a2a2a;
+      border: 2px dashed #444;
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+
+    .add-account-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      margin-bottom: 20px;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    input {
+      background: #333;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    input::placeholder {
+      color: #666;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #b8860b;
+      background: #3a3a3a;
+    }
+
+    .btn-add {
+      background: #2563eb;
+      width: auto;
+      padding: 10px 24px;
+    }
+
+    .btn-add:hover {
+      background: #1d4ed8;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-top: 30px;
+    }
+
+    .btn-action {
+      padding: 15px;
+      font-size: 16px;
+    }
+
+    .btn-ids {
+      background: #1e3a8a;
+    }
+
+    .btn-ids:hover {
+      background: #1e40af;
+    }
+
+    .btn-clear {
+      background: #dc2626;
+    }
+
+    .btn-clear:hover {
+      background: #b91c1c;
+    }
+
+    .timestamp {
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      margin-top: 20px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #444;
+      border-top-color: #b8860b;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .card-number {
+        font-size: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>
+        <span class="lock-icon">🔒</span>
+        Login pool manager
+      </h1>
+      <div class="status-badge">🔴 Locked</div>
+    </header>
+
+    <div class="add-account">
+      <div class="add-account-title">➕ ADD ACCOUNT</div>
+      <div class="form-row">
+        <input type="text" id="phone" placeholder="Phone number">
+        <input type="password" id="password" placeholder="Password">
+      </div>
+      <button class="btn btn-add" onclick="addAccount()">Add</button>
+    </div>
+
+    <div class="grid" id="accountsGrid">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading accounts...</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-action btn-ids" onclick="viewIds()">👁️ View IDs & Numbers</button>
+      <button class="btn btn-action btn-clear" onclick="clearAll()">💳 Deposit / Clear</button>
+    </div>
+
+    <div class="timestamp" id="timestamp"></div>
+  </div>
+
+  <script>
+    const API_BASE = '/api';
+
+    async function loadAccounts() {
+      try {
+        const response = await fetch(`${API_BASE}/accounts`);
+        const data = await response.json();
+        
+        renderAccounts(data);
+        updateTimestamp();
+      } catch (error) {
+        console.error('Error loading accounts:', error);
+        document.getElementById('accountsGrid').innerHTML = '<div class="loading">Error loading accounts</div>';
+      }
+    }
+
+    function renderAccounts(data) {
+      const { locked, inUse, waiting, badPassword, accounts } = data;
+
+      const cards = [
+        {
+          type: 'locked',
+          status: 'LOCKED',
+          icon: '🔒',
+          count: locked,
+          description: 'Locked at 08:00. Unlocks at 18:00.',
+          timeLeft: '9h 15m 23s',
+          timeInfo: 'Unlocks at 18:00 (Zambia)'
+        },
+        {
+          type: 'in-use',
+          status: 'IN USE',
+          icon: '▶',
+          count: inUse,
+          description: 'Not yet logged out',
+          timeLeft: '',
+          timeInfo: ''
+        },
+        {
+          type: 'waiting',
+          status: 'WAITING 24H',
+          icon: '⏳',
+          count: waiting,
+          description: 'Full account',
+          timeLeft: '',
+          timeInfo: ''
+        },
+        {
+          type: 'bad',
+          status: 'BAD PASSWORD',
+          icon: '❌',
+          count: badPassword,
+          description: 'Login failed',
+          timeLeft: '',
+          timeInfo: ''
+        }
+      ];
+
+      const html = cards.map(card => `
+        <div class="card card-${card.type}">
+          <div class="card-header">
+            <span class="card-icon">${card.icon}</span>
+            <span>${card.status}</span>
+          </div>
+          <div class="card-number">${card.count}</div>
+          <div class="card-info">
+            ${card.description}
+            ${card.timeLeft ? `<br><strong>${card.timeLeft}</strong><br><small>${card.timeInfo}</small>` : ''}
+          </div>
+          <button class="btn" onclick="viewAccounts('${card.type}')">
+            View 
+            <span class="btn-badge">${card.count}</span>
+          </button>
+        </div>
+      `).join('');
+
+      document.getElementById('accountsGrid').innerHTML = html;
+    }
+
+    async function addAccount() {
+      const phone = document.getElementById('phone').value;
+      const password = document.getElementById('password').value;
+
+      if (!phone || !password) {
+        alert('Please enter phone and password');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE}/accounts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, password })
+        });
+
+        if (response.ok) {
+          document.getElementById('phone').value = '';
+          document.getElementById('password').value = '';
+          loadAccounts();
+        }
+      } catch (error) {
+        alert('Error adding account');
+      }
+    }
+
+    function viewAccounts(type) {
+      alert(`View ${type} accounts - ${type} accounts selected`);
+    }
+
+    function viewIds() {
+      alert('View IDs & Numbers - Feature coming soon');
+    }
+
+    async function clearAll() {
+      if (confirm('Are you sure you want to clear all accounts?')) {
+        try {
+          await fetch(`${API_BASE}/accounts/clear/all`, { method: 'POST' });
+          loadAccounts();
+        } catch (error) {
+          alert('Error clearing accounts');
+        }
+      }
+    }
+
+    function updateTimestamp() {
+      const now = new Date();
+      const time = now.toLocaleTimeString();
+      document.getElementById('timestamp').textContent = `${time} CAT - Live data - Postgres - Zambia Time`;
+    }
+
+    // Load accounts on page load
+    loadAccounts();
+
+    // Refresh every 5 seconds
+    setInterval(loadAccounts, 5000);
+  </script>
+</body>
+</html>
