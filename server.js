@@ -11,6 +11,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// Serve index.html for root path
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+
 // Database file
 const DB_FILE = 'accounts.json';
 
