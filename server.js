@@ -1,93 +1,95 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Database file
-const DB_FILE = 'accounts.json';
+const PORT = process.env.PORT || 3000;
 
-// Load database
-function loadDatabase() {
-  if (fs.existsSync(DB_FILE)) {
-    try {
-      return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
-    } catch {
-      return { accounts: [] };
-    }
-  }
-  return { accounts: [] };
-}
-
-// Save database
-function saveDatabase(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
-let db = loadDatabase();
-
-// Serve index.html on root
 app.get('/', (req, res) => {
-  try {
-    res.sendFile(path.join(__dirname, 'index.html'));
-  } catch (err) {
-    res.status(500).send('Error loading page');
-  }
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Login Pool Manager</title>
+      <style>
+        body { background: #1a1a1a; color: #fff; font-family: Arial; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; background: #333; border: 1px solid #555; color: #fff; border-radius: 5px; }
+        button { width: 100%; padding: 10px; background: #059669; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #047857; }
+        .account { background: #333; padding: 15px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; }
+        .delete-btn { background: #dc2626; padding: 8px 15px; width: auto; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <h1>🔒 Login Pool Manager</h1>
+        <input type="text" id="phone" placeholder="Phone number">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="addAccount()">Add Account</button>
+        <div id="accounts"></div>
+      </div>
+      <script>
+        async function load() {
+          const res = await fetch('/api/accounts');
+          const data = await res.json();
+          const div = document.getElementById('accounts');
+          if (data.accounts.length === 0) {
+            div.innerHTML = '<p style="text-align:center;color:#666;">No accounts</p>';
+            return;
+          }
+          div.innerHTML = data.accounts.map(a => '<div class="account"><div><strong>' + a.phone + '</strong><br><small>🔑 ' + a.password + '</small></div><button class="delete-btn" onclick="del(' + a.id + ')">Delete</button></div>').join('');
+        }
+        async function addAccount() {
+          const phone = document.getElementById('phone').value;
+          const password = document.getElementById('password').value;
+          if (!phone || !password) { alert('Enter phone and password'); return; }
+          await fetch('/api/accounts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone, password })
+          });
+          document.getElementById('phone').value = '';
+          document.getElementById('password').value = '';
+          load();
+        }
+        async function del(id) {
+          if (!confirm('Delete?')) return;
+          await fetch('/api/accounts/' + id, { method: 'DELETE' });
+          load();
+        }
+        load();
+        setInterval(load, 2000);
+      </script>
+    </body>
+    </html>
+  `);
 });
 
-// API: Get all accounts
 app.get('/api/accounts', (req, res) => {
-  res.json({ accounts: db.accounts });
+  res.json({ accounts: global.accounts || [] });
 });
 
-// API: Add new account
 app.post('/api/accounts', (req, res) => {
-  try {
-    const { phone, password } = req.body;
-    
-    if (!phone || !password) {
-      return res.status(400).json({ error: 'Phone and password required' });
-    }
-
-    const newAccount = {
-      id: Date.now(),
-      phone: phone,
-      password: password,
-      createdAt: new Date()
-    };
-
-    db.accounts.push(newAccount);
-    saveDatabase(db);
-    res.json(newAccount);
-  } catch (err) {
-    res.status(500).json({ error: 'Error adding account' });
-  }
+  if (!global.accounts) global.accounts = [];
+  const { phone, password } = req.body;
+  if (!phone || !password) return res.status(400).json({ error: 'Required' });
+  global.accounts.push({ id: Date.now(), phone, password });
+  res.json({ id: global.accounts.length });
 });
 
-// API: Delete account
 app.delete('/api/accounts/:id', (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    db.accounts = db.accounts.filter(a => a.id !== id);
-    saveDatabase(db);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Error deleting account' });
-  }
+  if (!global.accounts) global.accounts = [];
+  global.accounts = global.accounts.filter(a => a.id !== parseInt(req.params.id));
+  res.json({ success: true });
 });
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'online' });
-});
-
-// Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log('Server running on port ' + PORT);
+  global.accounts = [];
 });
