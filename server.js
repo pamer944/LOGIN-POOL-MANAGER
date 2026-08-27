@@ -1,4 +1,4 @@
-   app.use(express.static('public'));
+const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 
@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(__dirname));
 
 const DB_FILE = 'accounts.json';
 
@@ -24,6 +23,12 @@ function saveDatabase(data) {
 
 let db = loadDatabase();
 
+// Serve HTML directly
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index.html');
+});
+
+// API endpoints
 app.get('/api/accounts', (req, res) => {
   res.json({ accounts: db.accounts });
 });
@@ -31,7 +36,7 @@ app.get('/api/accounts', (req, res) => {
 app.post('/api/accounts', (req, res) => {
   const { phone, password } = req.body;
   if (!phone || !password) return res.status(400).json({ error: 'Required' });
-  const newAccount = { id: Date.now(), phone, password, createdAt: new Date() };
+  const newAccount = { id: Date.now(), phone, password };
   db.accounts.push(newAccount);
   saveDatabase(db);
   res.json(newAccount);
