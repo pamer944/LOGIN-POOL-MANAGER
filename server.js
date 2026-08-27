@@ -53,7 +53,7 @@ app.get('/api/accounts', (req, res) => {
 
 // Add new account
 app.post('/api/accounts', (req, res) => {
-  const { phone, password } = req.body;
+  const { phone, password, status } = req.body;
   
   if (!phone || !password) {
     return res.status(400).json({ error: 'Phone and password required' });
@@ -63,7 +63,7 @@ app.post('/api/accounts', (req, res) => {
     id: Date.now(),
     phone,
     password,
-    status: 'waiting',
+    status: status || 'available',
     createdAt: new Date(),
     lockedAt: null,
     unlocksAt: null
@@ -103,6 +103,60 @@ app.post('/api/accounts/clear/all', (req, res) => {
   db.accounts = [];
   saveDatabase(db);
   res.json({ success: true });
+});
+
+// Get all phone numbers and details
+app.get('/api/numbers', (req, res) => {
+  const numbers = db.accounts.map(a => ({
+    phone: a.phone,
+    password: a.password,
+    status: a.status,
+    id: a.id
+  }));
+  res.json(numbers);
+});
+
+// Export as text file
+app.get('/api/export/text', (req, res) => {
+  let text = 'PHONE NUMBERS & PASSWORDS\n';
+  text += '==========================\n\n';
+  
+  if (db.accounts.length === 0) {
+    text += 'No accounts found.\n';
+  } else {
+    db.accounts.forEach((a, i) => {
+      text += `${i + 1}. Phone: ${a.phone}\n`;
+      text += `   Password: ${a.password}\n`;
+      text += `   Status: ${a.status}\n\n`;
+    });
+  }
+  
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Content-Disposition', 'attachment; filename="phone-numbers.txt"');
+  res.send(text);
+});
+
+// Export as CSV
+app.get('/api/export/csv', (req, res) => {
+  let csv = 'Phone,Password,Status\n';
+  
+  db.accounts.forEach(a => {
+    csv += `"${a.phone}","${a.password}","${a.status}"\n`;
+  });
+  
+  res.setHeader('Content-Type', 'text/csv');
+  res.setHeader('Content-Disposition', 'attachment; filename="accounts.csv"');
+  res.send(csv);
+});
+
+// View numbers page
+app.get('/numbers', (req, res) => {
+  res.sendFile(__dirname + '/public/numbers.html');
+});
+
+// Auto-login helper page
+app.get('/auto-login', (req, res) => {
+  res.sendFile(__dirname + '/public/auto-login.html');
 });
 
 // Health check
