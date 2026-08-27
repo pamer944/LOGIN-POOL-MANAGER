@@ -1,605 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Pool Manager</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background: #1a1a1a;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      padding: 20px;
-      min-height: 100vh;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-    }
-
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
-    }
-
-    h1 {
-      font-size: 28px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .lock-icon {
-      font-size: 24px;
-    }
-
-    .status-badge {
-      background: #8b3a3a;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-    }
-
-    .workflow-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .box {
-      background: #2a2a2a;
-      border: 2px solid;
-      border-radius: 16px;
-      padding: 20px;
-      min-height: 500px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .box-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 20px;
-      padding-bottom: 15px;
-      border-bottom: 2px solid;
-      font-size: 16px;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .box-icon {
-      font-size: 20px;
-    }
-
-    .box-count {
-      margin-left: auto;
-      background: rgba(255, 255, 255, 0.1);
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-    }
-
-    /* MAIN BOX */
-    .box-main {
-      border-color: #059669;
-    }
-
-    .box-main .box-header {
-      border-color: #059669;
-      color: #4ade80;
-    }
-
-    /* LOGIN BOX */
-    .box-login {
-      border-color: #2563eb;
-    }
-
-    .box-login .box-header {
-      border-color: #2563eb;
-      color: #60a5fa;
-    }
-
-    /* WAITING BOX */
-    .box-waiting {
-      border-color: #7c3aed;
-    }
-
-    .box-waiting .box-header {
-      border-color: #7c3aed;
-      color: #c4b5fd;
-    }
-
-    .accounts-list {
-      flex: 1;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .account-item {
-      background: #1a1a1a;
-      padding: 15px;
-      border-radius: 10px;
-      border-left: 4px solid;
-      transition: all 0.3s;
-    }
-
-    .box-main .account-item {
-      border-left-color: #059669;
-    }
-
-    .box-login .account-item {
-      border-left-color: #2563eb;
-    }
-
-    .box-waiting .account-item {
-      border-left-color: #7c3aed;
-    }
-
-    .account-item:hover {
-      transform: translateX(5px);
-      background: #252525;
-    }
-
-    .phone-number {
-      font-size: 16px;
-      font-weight: bold;
-      font-family: 'Courier New', monospace;
-      margin-bottom: 5px;
-    }
-
-    .password {
-      font-size: 12px;
-      color: #888;
-      font-family: 'Courier New', monospace;
-      margin-bottom: 8px;
-    }
-
-    .timer {
-      font-size: 12px;
-      color: #fbbf24;
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      padding: 8px 12px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.2s;
-      flex: 1;
-      min-width: 70px;
-    }
-
-    .btn-use {
-      background: #059669;
-      color: #fff;
-    }
-
-    .btn-use:hover {
-      background: #047857;
-    }
-
-    .btn-logout {
-      background: #dc2626;
-      color: #fff;
-    }
-
-    .btn-logout:hover {
-      background: #b91c1c;
-    }
-
-    .btn-delete {
-      background: #444;
-      color: #fff;
-    }
-
-    .btn-delete:hover {
-      background: #555;
-    }
-
-    .empty-state {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      text-align: center;
-      padding: 40px 20px;
-    }
-
-    .add-account-section {
-      background: #2a2a2a;
-      border: 2px dashed #444;
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 30px;
-    }
-
-    .add-account-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 16px;
-      margin-bottom: 15px;
-      color: #999;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr auto;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    @media (max-width: 600px) {
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    input {
-      background: #1a1a1a;
-      border: 1px solid #444;
-      color: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-
-    input::placeholder {
-      color: #666;
-    }
-
-    input:focus {
-      outline: none;
-      border-color: #059669;
-      background: #252525;
-    }
-
-    .btn-add {
-      background: #059669;
-      color: #fff;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-add:hover {
-      background: #047857;
-    }
-
-    .timestamp {
-      text-align: center;
-      color: #666;
-      font-size: 12px;
-      margin-top: 20px;
-    }
-
-    .loading {
-      text-align: center;
-      color: #999;
-      padding: 20px;
-    }
-
-    .spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #444;
-      border-top-color: #059669;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @media (max-width: 768px) {
-      .workflow-container {
-        grid-template-columns: 1fr;
-      }
-
-      .action-buttons {
-        flex-direction: column;
-      }
-
-      .btn {
-        flex: auto;
-        min-width: auto;
-      }
-    }
+    body { background: #1a1a1a; color: #fff; font-family: Arial; padding: 20px; }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; }
+    .add-section { background: #2a2a2a; padding: 20px; border-radius: 10px; margin-bottom: 30px; }
+    input { width: 100%; padding: 10px; margin: 10px 0; background: #1a1a1a; border: 1px solid #444; color: #fff; border-radius: 5px; }
+    button { width: 100%; padding: 10px; background: #059669; color: #fff; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    button:hover { background: #047857; }
+    .accounts { margin-top: 30px; }
+    .account { background: #2a2a2a; padding: 15px; margin: 10px 0; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .phone { font-size: 18px; font-weight: bold; font-family: monospace; }
+    .password { font-size: 12px; color: #888; font-family: monospace; }
+    .delete-btn { background: #dc2626; padding: 8px 15px; width: auto; }
+    .delete-btn:hover { background: #b91c1c; }
+    .empty { text-align: center; color: #666; padding: 40px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <h1>
-        <span class="lock-icon">🔒</span>
-        Login Pool Manager
-      </h1>
-      <div class="status-badge">🟢 Active</div>
-    </header>
-
-    <div class="add-account-section">
-      <div class="add-account-title">➕ ADD NEW ACCOUNT</div>
-      <div class="form-row">
-        <input type="text" id="phone" placeholder="Phone number">
-        <input type="password" id="password" placeholder="Password">
-        <button class="btn-add" onclick="addAccount()">Add</button>
-      </div>
+    <h1>🔒 Login Pool Manager</h1>
+    
+    <div class="add-section">
+      <h3>Add New Account</h3>
+      <input type="text" id="phone" placeholder="Phone number">
+      <input type="password" id="password" placeholder="Password">
+      <button onclick="addAccount()">Add Account</button>
     </div>
 
-    <div class="workflow-container">
-      <!-- MAIN BOX -->
-      <div class="box box-main">
-        <div class="box-header">
-          <span class="box-icon">📱</span>
-          <span>Main Box</span>
-          <span class="box-count" id="mainCount">0</span>
-        </div>
-        <div class="accounts-list" id="mainList">
-          <div class="empty-state">No accounts available</div>
-        </div>
-      </div>
-
-      <!-- LOGIN BOX -->
-      <div class="box box-login">
-        <div class="box-header">
-          <span class="box-icon">🔐</span>
-          <span>In Use</span>
-          <span class="box-count" id="loginCount">0</span>
-        </div>
-        <div class="accounts-list" id="loginList">
-          <div class="empty-state">No active logins</div>
-        </div>
-      </div>
-
-      <!-- WAITING BOX -->
-      <div class="box box-waiting">
-        <div class="box-header">
-          <span class="box-icon">⏳</span>
-          <span>Waiting 24H</span>
-          <span class="box-count" id="waitingCount">0</span>
-        </div>
-        <div class="accounts-list" id="waitingList">
-          <div class="empty-state">No accounts waiting</div>
-        </div>
-      </div>
+    <div class="accounts">
+      <h3>📱 Main Box</h3>
+      <div id="accountsList"></div>
     </div>
-
-    <div class="timestamp" id="timestamp"></div>
   </div>
 
   <script>
-    const API_BASE = '/api';
-
     async function loadAccounts() {
-      try {
-        const response = await fetch(`${API_BASE}/accounts`);
-        const data = await response.json();
-        
-        const mainAccounts = data.accounts.filter(a => a.status === 'available');
-        const loginAccounts = data.accounts.filter(a => a.status === 'in_use');
-        const waitingAccounts = data.accounts.filter(a => a.status === 'waiting');
-
-        renderAccounts(mainAccounts, 'main');
-        renderAccounts(loginAccounts, 'login');
-        renderAccounts(waitingAccounts, 'waiting');
-
-        updateCounts(data.accounts);
-        updateTimestamp();
-      } catch (error) {
-        console.error('Error loading accounts:', error);
-      }
-    }
-
-    function updateCounts(accounts) {
-      const mainCount = accounts.filter(a => a.status === 'available').length;
-      const loginCount = accounts.filter(a => a.status === 'in_use').length;
-      const waitingCount = accounts.filter(a => a.status === 'waiting').length;
-
-      document.getElementById('mainCount').textContent = mainCount;
-      document.getElementById('loginCount').textContent = loginCount;
-      document.getElementById('waitingCount').textContent = waitingCount;
-    }
-
-    function renderAccounts(accounts, boxType) {
-      const listId = boxType === 'main' ? 'mainList' : boxType === 'login' ? 'loginList' : 'waitingList';
-      const listElement = document.getElementById(listId);
-
-      if (accounts.length === 0) {
-        listElement.innerHTML = '<div class="empty-state">📭 No accounts</div>';
+      const response = await fetch('/api/accounts');
+      const data = await response.json();
+      const list = document.getElementById('accountsList');
+      
+      if (data.accounts.length === 0) {
+        list.innerHTML = '<div class="empty">No accounts yet</div>';
         return;
       }
-
-      const html = accounts.map(account => {
-        let timerHtml = '';
-        let actionButton = '';
-
-        if (account.status === 'available') {
-          actionButton = `<button class="btn btn-use" onclick="useAccount(${account.id})">🔓 Use This</button>`;
-        } else if (account.status === 'in_use') {
-          actionButton = `<button class="btn btn-logout" onclick="logoutAccount(${account.id})">📤 Log Out</button>`;
-        } else if (account.status === 'waiting') {
-          const unlockTime = new Date(account.unlocksAt);
-          const now = new Date();
-          const timeLeft = unlockTime - now;
-          
-          if (timeLeft > 0) {
-            const hours = Math.floor(timeLeft / 3600000);
-            const minutes = Math.floor((timeLeft % 3600000) / 60000);
-            timerHtml = `<div class="timer">⏱️ Ready in ${hours}h ${minutes}m</div>`;
-          }
-          actionButton = `<button class="btn btn-use" onclick="useAccount(${account.id})">🔓 Use Now</button>`;
-        }
-
-        return `
-          <div class="account-item">
-            <div class="phone-number">${account.phone}</div>
-            <div class="password">🔑 ${account.password}</div>
-            ${timerHtml}
-            <div class="action-buttons">
-              ${actionButton}
-              <button class="btn btn-delete" onclick="deleteAccount(${account.id})">🗑️ Delete</button>
-            </div>
+      
+      list.innerHTML = data.accounts.map(acc => `
+        <div class="account">
+          <div>
+            <div class="phone">${acc.phone}</div>
+            <div class="password">🔑 ${acc.password}</div>
           </div>
-        `;
-      }).join('');
-
-      listElement.innerHTML = html;
+          <button class="delete-btn" onclick="deleteAccount(${acc.id})">Delete</button>
+        </div>
+      `).join('');
     }
 
     async function addAccount() {
       const phone = document.getElementById('phone').value;
       const password = document.getElementById('password').value;
-
+      
       if (!phone || !password) {
         alert('Please enter phone and password');
         return;
       }
 
-      try {
-        const response = await fetch(`${API_BASE}/accounts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            phone, 
-            password,
-            status: 'available'
-          })
-        });
+      await fetch('/api/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, password })
+      });
 
-        if (response.ok) {
-          document.getElementById('phone').value = '';
-          document.getElementById('password').value = '';
-          loadAccounts();
-        }
-      } catch (error) {
-        alert('Error adding account');
-      }
-    }
-
-    async function useAccount(id) {
-      try {
-        const response = await fetch(`${API_BASE}/accounts/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'in_use' })
-        });
-
-        if (response.ok) {
-          loadAccounts();
-          alert('✅ Account moved to "In Use" box. You can now log in.');
-        }
-      } catch (error) {
-        alert('Error updating account');
-      }
-    }
-
-    async function logoutAccount(id) {
-      try {
-        const unlockTime = new Date();
-        unlockTime.setHours(unlockTime.getHours() + 24);
-
-        const response = await fetch(`${API_BASE}/accounts/${id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            status: 'waiting',
-            unlocksAt: unlockTime.toISOString()
-          })
-        });
-
-        if (response.ok) {
-          loadAccounts();
-          alert('✅ Account moved to "Waiting 24H" box. It will be ready in 24 hours.');
-        }
-      } catch (error) {
-        alert('Error updating account');
-      }
+      document.getElementById('phone').value = '';
+      document.getElementById('password').value = '';
+      loadAccounts();
     }
 
     async function deleteAccount(id) {
-      if (!confirm('Are you sure you want to delete this account?')) return;
-
-      try {
-        const response = await fetch(`${API_BASE}/accounts/${id}`, {
-          method: 'DELETE'
-        });
-
-        if (response.ok) {
-          loadAccounts();
-        }
-      } catch (error) {
-        alert('Error deleting account');
-      }
+      if (!confirm('Delete this account?')) return;
+      await fetch(`/api/accounts/${id}`, { method: 'DELETE' });
+      loadAccounts();
     }
 
-    function updateTimestamp() {
-      const now = new Date();
-      const time = now.toLocaleTimeString();
-      document.getElementById('timestamp').textContent = `Last updated: ${time}`;
-    }
-
-    // Auto-check waiting accounts every minute
-    setInterval(() => {
-      fetch(`${API_BASE}/accounts`)
-        .then(r => r.json())
-        .then(data => {
-          data.accounts.forEach(account => {
-            if (account.status === 'waiting' && account.unlocksAt) {
-              const unlockTime = new Date(account.unlocksAt);
-              const now = new Date();
-              
-              if (now >= unlockTime) {
-                // Move back to available
-                fetch(`${API_BASE}/accounts/${account.id}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ status: 'available' })
-                }).then(() => loadAccounts());
-              }
-            }
-          });
-        });
-    }, 60000);
-
-    // Load accounts on page load
     loadAccounts();
-
-    // Refresh every 5 seconds
-    setInterval(loadAccounts, 5000);
+    setInterval(loadAccounts, 2000);
   </script>
 </body>
 </html>
